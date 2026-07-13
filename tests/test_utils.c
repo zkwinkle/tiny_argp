@@ -5,6 +5,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* Unity assertions are available transitively via the test file that
+ * includes test_utils.h.  We include unity.h here so the assert helpers
+ * defined below can call TEST_FAIL_MESSAGE directly. */
+#include "unity.h"
+
 parser_call_t parser_log[PARSER_LOG_MAX];
 size_t parser_log_count;
 
@@ -126,6 +131,51 @@ const char *format_key(int key) {
         snprintf(key_label_buf, sizeof(key_label_buf), "%d", key);
       }
       return key_label_buf;
+  }
+}
+
+/* Assert the full ordered key sequence is exactly as expected.
+ * Checks count first, then each individual key.  On any mismatch the
+ * failure message includes the formatted log for easy diagnosis. */
+void assert_key_sequence_exact(const int *expected_keys, size_t n) {
+  if (parser_log_count != n) {
+    char msg[640];
+    snprintf(msg, sizeof(msg),
+             "expected %zu keys but got %zu. Log: %s",
+             n, parser_log_count, format_parser_log());
+    TEST_FAIL_MESSAGE(msg);
+    return;
+  }
+  for (size_t i = 0; i < n; i++) {
+    if (parser_log[i].key != expected_keys[i]) {
+      char msg[640];
+      snprintf(msg, sizeof(msg),
+               "key mismatch at index %zu: expected %s got %s. Log: %s",
+               i, format_key(expected_keys[i]), format_key(parser_log[i].key),
+               format_parser_log());
+      TEST_FAIL_MESSAGE(msg);
+      return;
+    }
+  }
+}
+
+/* Canonical recording parser: logs the call and returns SUCCESS for all
+ * standard special keys; UNKNOWN for everything else. */
+int default_rec(int key, char *arg, struct tiny_argp_state *state) {
+  (void)state;
+  log_parser_call(key, arg);
+  switch (key) {
+    case TINY_ARGP_KEY_ARG:
+    case TINY_ARGP_KEY_ARGS:
+    case TINY_ARGP_KEY_INIT:
+    case TINY_ARGP_KEY_END:
+    case TINY_ARGP_KEY_NO_ARGS:
+    case TINY_ARGP_KEY_SUCCESS:
+    case TINY_ARGP_KEY_ERROR:
+    case TINY_ARGP_KEY_FINI:
+      return TINY_ARGP_SUCCESS;
+    default:
+      return TINY_ARGP_ERR_UNKNOWN;
   }
 }
 

@@ -135,4 +135,29 @@ const char *format_key(int key);
  * failure messages so a wrong sequence is immediately visible. */
 const char *format_parser_log(void);
 
+/* ==============================================================
+ * Sequence assertions
+ * ============================================================== */
+
+/* Strict exact-sequence check: asserts parser_log_count == n AND that
+ * parser_log[i].key == expected_keys[i] for every i in [0, n).
+ * On failure the assertion message includes format_parser_log() output
+ * so a mismatch is immediately diagnosable. */
+void assert_key_sequence_exact(const int *expected_keys, size_t n);
+
+/* ==============================================================
+ * Canonical recording parser
+ * ============================================================== */
+
+/* Default recording parser for use as a tiny_argp parser callback.
+ * Calls log_parser_call() for every invocation, returns
+ * TINY_ARGP_SUCCESS for all standard special keys (INIT, END, NO_ARGS,
+ * SUCCESS, ERROR, FINI, KEY_ARG, KEY_ARGS) and TINY_ARGP_ERR_UNKNOWN
+ * for anything else.
+ *
+ * Tests that need to handle specific user option keys (e.g. 'a', 'b')
+ * must supply their own parser that handles those keys; default_rec will
+ * return TINY_ARGP_ERR_UNKNOWN for any key not listed above. */
+int default_rec(int key, char *arg, struct tiny_argp_state *state);
+
 #endif
