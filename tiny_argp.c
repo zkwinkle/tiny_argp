@@ -19,23 +19,23 @@
 enum arg_dashes { SHORT = 1, LONG = 2 };
 
 enum exit_type {
-  NO_EXIT = 0,          // Don't exit
-  IMMEDIATE_EXIT = 1,   // Exit immediately
-  ERROR_THEN_EXIT = 2,  // Pass ERROR and FINI keys to parse before exiting
-  GOTO_END = 4,         // Skip to END check then continue normally
+  NO_EXIT = 0,         // Don't exit
+  IMMEDIATE_EXIT = 1,  // Exit immediately
+  ERROR_THEN_EXIT = 2, // Pass ERROR and FINI keys to parse before exiting
+  GOTO_END = 4,        // Skip to END check then continue normally
 };
 
 /*****************************************************************************
  * Local struct types
  ****************************************************************************/
 struct pstate {
-  enum exit_type force_exit;  // For when something causes an early exit
-  int exit_code;              // Value to return on early exit/error/whatever
-  bool no_args;    // Keep track if any non-option arguments have been parsed
-  size_t arg_num;  // For overwriting the public state's arg_num value
-  size_t quote_index;      // Keeping track of '--' quote arg
-  char *current_opt_name;  // The opt as it was given in the command line
-  bool manual_exit;        // Special flag for if tiny_argp_exit() is called
+  enum exit_type force_exit; // For when something causes an early exit
+  int exit_code;             // Value to return on early exit/error/whatever
+  bool no_args;       // Keep track if any non-option arguments have been parsed
+  size_t arg_num;     // For overwriting the public state's arg_num value
+  size_t quote_index; // Keeping track of '--' quote arg
+  char *current_opt_name; // The opt as it was given in the command line
+  bool manual_exit;       // Special flag for if tiny_argp_exit() is called
 };
 
 struct opt_arg {
@@ -60,7 +60,8 @@ static const struct tiny_argp_option help_options[] = {
  * Forward declarations
  ****************************************************************************/
 void tiny_argp_help(const struct tiny_argp *tiny_argp,
-                  const tiny_argp_printer_t printer, unsigned flags, char *name);
+                    const tiny_argp_printer_t printer, unsigned flags,
+                    char *name);
 
 bool is_end_option(const struct tiny_argp_option tiny_argp);
 
@@ -75,7 +76,7 @@ static void opt_error(const char *format, int error, const char *opt,
   if (!(state->flags & TINY_ARGP_NO_ERRS)) {
     err_printer(format, state->name, opt);
     tiny_argp_help(state->root_tiny_argp, state->root_tiny_argp->err_printer,
-                 TINY_ARGP_HELP_STD_ERR, state->name);
+                   TINY_ARGP_HELP_STD_ERR, state->name);
   }
   if (state->flags & TINY_ARGP_NO_EXIT) {
     EXIT_STATE(state) = ERROR_THEN_EXIT;
@@ -111,9 +112,9 @@ static void print_opt_usage(enum arg_dashes dashes, struct tiny_argp_option opt,
   }
 
   // First we must calculate the length of the string to print
-  size_t print_length = 2 + dashes;  // Start with 2 for braces [] + dashes
+  size_t print_length = 2 + dashes; // Start with 2 for braces [] + dashes
   if (opt.arg != 0) {
-    print_length += strlen(opt.arg) + 1;  // +1 for space/equal
+    print_length += strlen(opt.arg) + 1; // +1 for space/equal
     if (opt.flags & OPTION_ARG_OPTIONAL) {
       // Another 2 braces around arg (but only adds 1 char in total for SHORT)
       print_length += dashes;
@@ -225,6 +226,7 @@ static void print_up_to(const char *string, const char *up_to,
 static void print_usage(const struct tiny_argp *tiny_argp,
                         const tiny_argp_printer_t printer, unsigned flags,
                         const char *name, bool include_help) {
+  const char *args_doc = tiny_argp->args_doc ? tiny_argp->args_doc : "";
   printer("Usage: ", name);
   size_t current_col = strlen("Usage:  ");
   if (name != NULL) {
@@ -247,7 +249,8 @@ static void print_usage(const struct tiny_argp *tiny_argp,
     while (!is_end_option(tiny_argp->options[i])) {
       struct tiny_argp_option option = tiny_argp->options[i];
       i++;
-      if (isprint(option.key) && option.arg == 0) {
+      if (isprint(option.key) && option.arg == 0 &&
+          !(option.flags & OPTION_HIDDEN)) {
         if (!noarg_shorts) {
           printer("[");
         }
@@ -289,8 +292,8 @@ static void print_usage(const struct tiny_argp *tiny_argp,
     }
   }
 
-  usage_newline_if_eol(&current_col, strlen(tiny_argp->args_doc), printer);
-  print_up_to(tiny_argp->args_doc, NULL, current_col, USAGE_INDENT, printer);
+  usage_newline_if_eol(&current_col, strlen(args_doc), printer);
+  print_up_to(args_doc, NULL, current_col, USAGE_INDENT, printer);
 }
 
 #define HELP_OPT_DOC_INDENT 29
@@ -383,30 +386,32 @@ static void print_long_help(const struct tiny_argp_option *options,
 
   // Newline in the middle is to keep it under 80 chars
   if (print_arg_info) {
-    printer(
-        "\r\nMandatory or optional arguments to long options are also "
-        "mandatory "
-        "or optional\r\nfor any corresponding short options.\r\n");
+    printer("\r\nMandatory or optional arguments to long options are also "
+            "mandatory "
+            "or optional\r\nfor any corresponding short options.\r\n");
   }
 }
 
 // The general function that prints help messages, called by API help functions
 // directly
-static void help(const struct tiny_argp *tiny_argp, const tiny_argp_printer_t printer,
-                 unsigned flags, char *name, bool include_help) {
+static void help(const struct tiny_argp *tiny_argp,
+                 const tiny_argp_printer_t printer, unsigned flags, char *name,
+                 bool include_help) {
+  /* NULL doc is treated as empty — spares callers from having to pass "". */
+  const char *doc = tiny_argp->doc ? tiny_argp->doc : "";
   bool printed = false;
   if (flags & (TINY_ARGP_HELP_USAGE | TINY_ARGP_HELP_SHORT_USAGE)) {
     print_usage(tiny_argp, printer, flags, name, include_help);
     printed = true;
   }
 
-  const char *vertical_tab = tiny_argp->doc;
+  const char *vertical_tab = doc;
   while (*vertical_tab && (*vertical_tab != '\v')) {
     vertical_tab++;
   }
 
   if (flags & TINY_ARGP_HELP_PRE_DOC) {
-    print_up_to(tiny_argp->doc, vertical_tab, 0, 0, printer);
+    print_up_to(doc, vertical_tab, 0, 0, printer);
     printed = true;
   }
 
@@ -476,7 +481,7 @@ enum exit_type call_parser(int key, char *arg, struct tiny_argp_state *state) {
 
   // Manual exit happens when tiny_argp_exit() is called
   if (PSTATE(state)->manual_exit) {
-    state->arg_num = PSTATE(state)->arg_num;  // Overwrite public arg_num
+    state->arg_num = PSTATE(state)->arg_num; // Overwrite public arg_num
     return EXIT_STATE(state);
   }
 
@@ -524,13 +529,12 @@ enum exit_type call_parser(int key, char *arg, struct tiny_argp_state *state) {
            is_user_option(key, state->root_tiny_argp->options)) {
     // Only case when ERR_UNKNOWN is considered a "real" error is
     // when it's returned from a user-defined key.
-    opt_error(
-        "%s: %s: (PROGRAM ERROR) Option should have been "
-        "recognized!?\r\n",
-        EINVAL, PSTATE(state)->current_opt_name, state);
+    opt_error("%s: %s: (PROGRAM ERROR) Option should have been "
+              "recognized!?\r\n",
+              EINVAL, PSTATE(state)->current_opt_name, state);
   }
 
-  state->arg_num = PSTATE(state)->arg_num;  // Overwrite public arg_num
+  state->arg_num = PSTATE(state)->arg_num; // Overwrite public arg_num
   return EXIT_STATE(state);
 }
 
@@ -539,37 +543,37 @@ enum exit_type call_parser(int key, char *arg, struct tiny_argp_state *state) {
 static bool check_option(const char *opt, const enum arg_dashes dashes,
                          const struct tiny_argp_option option) {
   switch (dashes) {
-    case SHORT:
-      if (!isprint(option.key)) {
-        break;
-      }
-      if (!strncmp(opt, (char *)&option.key, 1)) {
-        return true;
-      }
+  case SHORT:
+    if (!isprint(option.key)) {
       break;
-    case LONG:;
-      if (option.name == 0) {
-        break;
-      }
-      size_t name_len = strlen(option.name);
-      size_t opt_len = strlen(opt);
-      if (opt_len < name_len) {
-        break;
-      }
-      if (strncmp(opt, option.name, name_len)) {
-        break;
-      }
-      if (opt_len == name_len) {
-        return true;
-      }
-
-      // strlen(opt) > option.name implied
-      // '=' can separate argument
-      if (opt[name_len] == '=') {
-        return true;
-      }
-
+    }
+    if (!strncmp(opt, (char *)&option.key, 1)) {
+      return true;
+    }
+    break;
+  case LONG:;
+    if (option.name == 0) {
       break;
+    }
+    size_t name_len = strlen(option.name);
+    size_t opt_len = strlen(opt);
+    if (opt_len < name_len) {
+      break;
+    }
+    if (strncmp(opt, option.name, name_len)) {
+      break;
+    }
+    if (opt_len == name_len) {
+      return true;
+    }
+
+    // strlen(opt) > option.name implied
+    // '=' can separate argument
+    if (opt[name_len] == '=') {
+      return true;
+    }
+
+    break;
   }
   return false;
 }
@@ -577,9 +581,9 @@ static bool check_option(const char *opt, const enum arg_dashes dashes,
 // Calls check_option to see if the given option is one of the user-defined
 // options, if it is the _option struct is returned. If it isn't one of
 // them NULL is returned.
-static const struct tiny_argp_option *find_option(
-    const char *opt, const enum arg_dashes dashes,
-    const struct tiny_argp_option *options) {
+static const struct tiny_argp_option *
+find_option(const char *opt, const enum arg_dashes dashes,
+            const struct tiny_argp_option *options) {
   while (!is_end_option(*options)) {
     if (check_option(opt, dashes, *options)) {
       return options;
@@ -603,38 +607,38 @@ static char *get_arg(struct opt_arg *opt_arg, struct tiny_argp_state *state) {
   char *arg;
 
   switch (opt_arg->size) {
-    case SHORT:
-      if (!takes_arg) {
-        return NULL;
-      }
-      if (opt_arg->opt[1] != '\0') {
-        return opt_arg->opt + 1;
-      }
-      if (!requires_arg) {
-        return NULL;
-      }
-      state->next++;
-      if (state->next >= state->argc) {
-        return NULL;
-      }
-      arg = state->argv[state->next];
-      return arg;
-    case LONG:;
-      // should be safe because option should've been
-      // validated before calling this function
-      size_t len = strlen(opt_arg->option->name);
-      if (opt_arg->opt[len] == '=') {
-        return opt_arg->opt + len + 1;
-      }
-      if (!takes_arg || !requires_arg) {
-        return NULL;
-      }
-      state->next++;
-      if (state->next >= state->argc) {
-        return NULL;
-      }
-      arg = state->argv[state->next];
-      return arg;
+  case SHORT:
+    if (!takes_arg) {
+      return NULL;
+    }
+    if (opt_arg->opt[1] != '\0') {
+      return opt_arg->opt + 1;
+    }
+    if (!requires_arg) {
+      return NULL;
+    }
+    state->next++;
+    if (state->next >= state->argc) {
+      return NULL;
+    }
+    arg = state->argv[state->next];
+    return arg;
+  case LONG:;
+    // should be safe because option should've been
+    // validated before calling this function
+    size_t len = strlen(opt_arg->option->name);
+    if (opt_arg->opt[len] == '=') {
+      return opt_arg->opt + len + 1;
+    }
+    if (!takes_arg || !requires_arg) {
+      return NULL;
+    }
+    state->next++;
+    if (state->next >= state->argc) {
+      return NULL;
+    }
+    arg = state->argv[state->next];
+    return arg;
   }
 
   return NULL;
@@ -735,13 +739,13 @@ static enum exit_type process_option(char *opt, struct tiny_argp_state *state) {
 
     if (is_help_option(opt_arg.option)) {
       switch (opt_arg.option->key) {
-        case '?':
-          tiny_argp_state_help(state, state->root_tiny_argp->printer,
+      case '?':
+        tiny_argp_state_help(state, state->root_tiny_argp->printer,
                              TINY_ARGP_HELP_STD_HELP);
-          break;
-        default:
-          // Only other option is --usage
-          tiny_argp_state_help(state, state->root_tiny_argp->printer,
+        break;
+      default:
+        // Only other option is --usage
+        tiny_argp_state_help(state, state->root_tiny_argp->printer,
                              TINY_ARGP_HELP_USAGE);
       }
       // Immediate exit on help options
@@ -772,7 +776,8 @@ static enum exit_type process_options(struct tiny_argp_state *state) {
   while (state->next < state->argc) {
     char *opt = state->argv[state->next];
 
-    if (*opt != '-') {
+    /* A bare "-" is a positional (stdin/stdout convention), not an option. */
+    if (*opt != '-' || opt[1] == '\0') {
       state->next++;
       continue;
     }
@@ -804,7 +809,7 @@ static void shift_arg(size_t origin, size_t destination, char **argv) {
     for (size_t i = origin; i < destination; i++) {
       argv[i] = argv[i + 1];
     }
-  } else {  // origin > destination
+  } else { // origin > destination
     for (size_t i = origin; i > destination; i--) {
       argv[i] = argv[i - 1];
     }
@@ -829,7 +834,9 @@ static void shift_opts_back(struct tiny_argp_state *state) {
   while (state->next < state->argc) {
     char *opt = state->argv[state->next];
 
-    if (*opt != '-') {
+    /* Bare "-" is a positional argument, don't shift it into the option region.
+     */
+    if (*opt != '-' || opt[1] == '\0') {
       state->next++;
       continue;
     }
@@ -894,7 +901,11 @@ static enum exit_type process_any(struct tiny_argp_state *state) {
       continue;
     }
 
-    bool is_arg = (*arg != '-') || (state->next > PSTATE(state)->quote_index);
+    bool is_arg = (*arg != '-') ||
+                  /* Bare "-" is a positional argument. */
+                  (arg[1] == '\0') ||
+                  /* All args beyond -- are positional args. */
+                  (state->next > PSTATE(state)->quote_index);
     if (is_arg) {
       state->next++;
       if (!(state->flags & TINY_ARGP_NO_ARGS)) {
@@ -922,7 +933,7 @@ static bool check_consumed_all_args(const struct tiny_argp_state *state) {
     return true;
   }
 
-  size_t next = state->next;  // Copy to not alter state
+  size_t next = state->next; // Copy to not alter state
   while (next < state->argc) {
     if (next == PSTATE(state)->quote_index) {
       next++;
@@ -948,7 +959,7 @@ static bool check_consumed_all_args(const struct tiny_argp_state *state) {
  * API parser function definition
  ****************************************************************************/
 int tiny_argp_parse(const struct tiny_argp *tiny_argp, size_t argc, char **argv,
-                  unsigned flags, size_t *arg_index, void *input) {
+                    unsigned flags, size_t *arg_index, void *input) {
   struct pstate private_state = {
       .force_exit = NO_EXIT,
       .exit_code = 0,
@@ -959,15 +970,15 @@ int tiny_argp_parse(const struct tiny_argp *tiny_argp, size_t argc, char **argv,
       .manual_exit = false,
   };
   struct tiny_argp_state state_obj = {.root_tiny_argp = tiny_argp,
-                                    .argc = argc,
-                                    .argv = argv,
-                                    .next = 0,
-                                    .flags = flags,
-                                    .arg_num = 0,
-                                    .quoted = 0,
-                                    .input = input,
-                                    .name = NULL,
-                                    .pstate = (void *)&private_state};
+                                      .argc = argc,
+                                      .argv = argv,
+                                      .next = 0,
+                                      .flags = flags,
+                                      .arg_num = 0,
+                                      .quoted = 0,
+                                      .input = input,
+                                      .name = NULL,
+                                      .pstate = (void *)&private_state};
   struct tiny_argp_state *state = &state_obj;
 
   if (call_parser(TINY_ARGP_KEY_INIT, NULL, state)) {
@@ -989,33 +1000,35 @@ int tiny_argp_parse(const struct tiny_argp *tiny_argp, size_t argc, char **argv,
     }
 
     // Then shift options back
-    if (!skip_to_exit_check) shift_opts_back(state);
+    if (!skip_to_exit_check)
+      shift_opts_back(state);
   }
 
   // Then args / all
-  if (!skip_to_exit_check) process_any(state);
+  if (!skip_to_exit_check)
+    process_any(state);
 
   // Exit check
   switch (EXIT_STATE(state)) {
-    case IMMEDIATE_EXIT:
-      return EXIT_CODE(state);
-    case ERROR_THEN_EXIT:
-      break;
-    case GOTO_END:
-    case NO_EXIT:
-    default:;
-      // Check for NO_ARGS
-      if (PSTATE(state)->no_args) {
-        call_parser(TINY_ARGP_KEY_NO_ARGS, NULL, state);
-      }
+  case IMMEDIATE_EXIT:
+    return EXIT_CODE(state);
+  case ERROR_THEN_EXIT:
+    break;
+  case GOTO_END:
+  case NO_EXIT:
+  default:;
+    // Check for NO_ARGS
+    if (PSTATE(state)->no_args) {
+      call_parser(TINY_ARGP_KEY_NO_ARGS, NULL, state);
+    }
 
-      if (check_consumed_all_args(state)) {
-        call_parser(TINY_ARGP_KEY_END, NULL, state);
-      }
+    if (check_consumed_all_args(state)) {
+      call_parser(TINY_ARGP_KEY_END, NULL, state);
+    }
 
-      if (arg_index != NULL) {
-        *arg_index = state->next;
-      }
+    if (arg_index != NULL) {
+      *arg_index = state->next;
+    }
   }
 
   if (EXIT_CODE(state) != TINY_ARGP_SUCCESS &&
@@ -1035,12 +1048,13 @@ int tiny_argp_parse(const struct tiny_argp *tiny_argp, size_t argc, char **argv,
  * API *help* function definitions
  ****************************************************************************/
 void tiny_argp_help(const struct tiny_argp *tiny_argp,
-                  const tiny_argp_printer_t printer, unsigned flags, char *name) {
+                    const tiny_argp_printer_t printer, unsigned flags,
+                    char *name) {
   help(tiny_argp, printer, flags, name, false);
 }
 
 void tiny_argp_state_help(const struct tiny_argp_state *state,
-                        tiny_argp_printer_t printer, unsigned flags) {
+                          tiny_argp_printer_t printer, unsigned flags) {
   if (state->flags & TINY_ARGP_NO_ERRS) {
     return;
   }
@@ -1051,13 +1065,16 @@ void tiny_argp_state_help(const struct tiny_argp_state *state,
 
 void tiny_argp_usage(const struct tiny_argp_state *state) {
   tiny_argp_state_help(state, state->root_tiny_argp->err_printer,
-                     TINY_ARGP_HELP_STD_USAGE);
+                       TINY_ARGP_HELP_STD_USAGE);
 }
 
 void tiny_argp_error(const struct tiny_argp_state *state, const char *error) {
+  if (state->flags & TINY_ARGP_NO_ERRS) {
+    return;
+  }
   state->root_tiny_argp->err_printer("%s: %s\r\n", state->name, error);
   tiny_argp_state_help(state, state->root_tiny_argp->err_printer,
-                     TINY_ARGP_HELP_STD_ERR);
+                       TINY_ARGP_HELP_STD_ERR);
 }
 
 void tiny_argp_exit(const struct tiny_argp_state *state, int status) {
