@@ -2,6 +2,23 @@
 
 A GNU argp inspired CLI parser for embedded / bare-metal C.
 
+## Printer requirements
+
+All output goes through the `printer` and `err_printer` callbacks on the
+`tiny_argp` struct. They have a `printf`-style signature:
+
+```c
+typedef int (*tiny_argp_printer_t)(const char *fmt, ...);
+```
+
+The library only ever calls them with the following conversion specifiers:
+
+- `%s`: null-terminated string
+- `%c`: single character
+
+Any minimal `printf` implementation that handles `%s` and `%c` is sufficient
+(e.g. [mpaland/printf](https://github.com/mpaland/printf), [nanoprintf](https://github.com/charlesnicholson/nanoprintf)).
+
 ## To Test
 
 ```

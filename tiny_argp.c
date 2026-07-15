@@ -86,12 +86,36 @@ static void opt_error(const char *format, int error, const char *opt,
   EXIT_CODE(state) = error;
 }
 
+// Prints n literal spaces. Replaces the printf `%*s ""` idiom so the library
+// works with minimal printf implementations that lack width-from-arg support.
+static void print_spaces(size_t n, const tiny_argp_printer_t printer) {
+  while (n--) {
+    printer(" ");
+  }
+}
+
+// Prints the first `len` bytes of `s`. Replaces the printf `%.*s` idiom so the
+// library works with minimal printf implementations that lack
+// precision-from-arg support. Clamped to LINE_LENGTH since all callers emit at
+// most one line at a time.
+static void print_bounded(const char *s, size_t len,
+                          const tiny_argp_printer_t printer) {
+  char buf[LINE_LENGTH + 1];
+  if (len > LINE_LENGTH) {
+    len = LINE_LENGTH;
+  }
+  memcpy(buf, s, len);
+  buf[len] = '\0';
+  printer("%s", buf);
+}
+
 #define USAGE_INDENT 12
 static void usage_newline_if_eol(size_t *current_col, size_t to_print,
                                  const tiny_argp_printer_t printer) {
   // reserve last column for newline char
   if ((*current_col + to_print) >= LINE_LENGTH - 1) {
-    printer("\r\n%*s", USAGE_INDENT, "");
+    printer("\r\n");
+    print_spaces(USAGE_INDENT, printer);
     *current_col = USAGE_INDENT;
   }
 }
@@ -178,7 +202,8 @@ static void print_up_to(const char *string, const char *up_to,
   while (*string) {
     // reserve last column for newline char
     if (up_to != NULL && (current_col + up_to - string) < (LINE_LENGTH - 1)) {
-      printer("%.*s\r\n", up_to - string, string);
+      print_bounded(string, up_to - string, printer);
+      printer("\r\n");
       break;
     } else if ((current_col + strlen(string)) < (LINE_LENGTH - 1)) {
       printer("%s\r\n", string);
@@ -191,7 +216,7 @@ static void print_up_to(const char *string, const char *up_to,
       eol--;
     }
     if (eol != string) {
-      printer("%.*s", eol + 1 - string, string);
+      print_bounded(string, eol + 1 - string, printer);
       string = eol + 1;
     } else {
       // Look for whitespace to break apart
@@ -209,7 +234,8 @@ static void print_up_to(const char *string, const char *up_to,
         }
       }
 
-      printer("%.*s\r\n", break_point - string, string);
+      print_bounded(string, break_point - string, printer);
+      printer("\r\n");
       string = break_point;
     }
 
@@ -217,7 +243,7 @@ static void print_up_to(const char *string, const char *up_to,
       string++;
     }
     if (*string) {
-      printer("%*s", indent, "");
+      print_spaces(indent, printer);
       current_col = indent;
     }
   }
@@ -351,13 +377,14 @@ static void print_opt_help(const struct tiny_argp_option opt,
 
   // Indentation before doc string
   if (current_col >= HELP_MAX_OPT_DOC_INDENT - 3) {
-    printer("\r\n%*s", HELP_OPT_DOC_INDENT, "");
+    printer("\r\n");
+    print_spaces(HELP_OPT_DOC_INDENT, printer);
     current_col = HELP_OPT_DOC_INDENT;
   } else if (current_col >= HELP_OPT_DOC_INDENT - 1) {
     printer("   ");
     current_col += 3;
   } else {
-    printer("%*s", HELP_OPT_DOC_INDENT - current_col, "");
+    print_spaces(HELP_OPT_DOC_INDENT - current_col, printer);
     current_col = HELP_OPT_DOC_INDENT;
   }
 
@@ -370,7 +397,8 @@ static void print_long_help(const struct tiny_argp_option *options,
   bool print_arg_info = false;
   while (!is_end_option(*options)) {
     print_opt_help(*options, printer);
-    if (options->name != 0 && isprint((unsigned char)options->key) && options->arg != 0) {
+    if (options->name != 0 && isprint((unsigned char)options->key) &&
+        options->arg != 0) {
       print_arg_info = true;
     }
     options++;
