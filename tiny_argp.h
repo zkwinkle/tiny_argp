@@ -98,9 +98,9 @@ struct tiny_argp_option {
 /* This option isn't displayed in any help messages.  */
 #define OPTION_HIDDEN 0x2
 
-struct tiny_argp_state;  // fwd declare this type
+struct tiny_argp_state; // fwd declare this type
 typedef int (*tiny_argp_parser_t)(int key, char *arg,
-                                struct tiny_argp_state *state);
+                                  struct tiny_argp_state *state);
 typedef int (*tiny_argp_printer_t)(const char *fmt, ...);
 
 /*****************************************************************************
@@ -110,7 +110,8 @@ typedef int (*tiny_argp_printer_t)(const char *fmt, ...);
    TINY_ARGP_ERR_UNKNOWN should be returned if they aren't understood.
 
    The sequence of keys to a parsing function is either (where each
-   uppercased word should be prefixed by `TINY_ARGP_KEY_' and opt is a user key):
+   uppercased word should be prefixed by `TINY_ARGP_KEY_' and opt is a user
+   key):
 
        INIT opt... NO_ARGS END SUCCESS  -- No non-option arguments at all
    or  INIT (opt | ARG)... END SUCCESS  -- All non-option args parsed
@@ -165,9 +166,9 @@ struct tiny_argp {
 
   /* What to do with an option from this structure.  KEY is the key
      associated with the option, and ARG is any associated argument (NULL if
-     none was supplied).  If KEY isn't understood, TINY_ARGP_ERR_UNKNOWN should be
-     returned.  If a non-zero, non-TINY_ARGP_ERR_UNKNOWN value is returned, then
-     parsing is stopped immediately, and that value is returned from
+     none was supplied).  If KEY isn't understood, TINY_ARGP_ERR_UNKNOWN should
+     be returned.  If a non-zero, non-TINY_ARGP_ERR_UNKNOWN value is returned,
+     then parsing is stopped immediately, and that value is returned from
      tiny_argp_parse().  For special (non-user-supplied) values of KEY, see the
      TINY_ARGP_KEY_ definitions below.  */
   tiny_argp_parser_t parser;
@@ -205,9 +206,9 @@ struct tiny_argp_state {
   /* The flags supplied to tiny_argp_parse.  May be modified.  */
   unsigned flags;
 
-  /* While calling a parsing function with a key of TINY_ARGP_KEY_ARG, this is the
-     number of the current arg, starting at zero.  At all other times, this is
-     the number of such arguments that have been processed.  */
+  /* While calling a parsing function with a key of TINY_ARGP_KEY_ARG, this is
+     the number of the current arg, starting at zero.  At all other times, this
+     is the number of such arguments that have been processed.  */
   unsigned arg_num;
 
   /* If non-zero, the index in ARGV of the first argument following a special
@@ -252,21 +253,22 @@ struct tiny_argp_state {
 #define TINY_ARGP_NO_EXIT 0x20
 
 /* Turns off any message-printing/exiting options.  */
-#define TINY_ARGP_SILENT (TINY_ARGP_NO_EXIT | TINY_ARGP_NO_ERRS | TINY_ARGP_NO_HELP)
+#define TINY_ARGP_SILENT                                                       \
+  (TINY_ARGP_NO_EXIT | TINY_ARGP_NO_ERRS | TINY_ARGP_NO_HELP)
 
-/* Parse the options strings in ARGC & ARGV according to the options in TINY_ARGP.
- * FLAGS is one of the TINY_ARGP_ flags above.  If ARG_INDEX is non-NULL, the
- * index in ARGV of the first unparsed arg is returned in it.  If some parser
- * routine returned a non-zero value, it is returned; otherwise 0 is
+/* Parse the options strings in ARGC & ARGV according to the options in
+ * TINY_ARGP. FLAGS is one of the TINY_ARGP_ flags above.  If ARG_INDEX is
+ * non-NULL, the index in ARGV of the first unparsed arg is returned in it.  If
+ * some parser routine returned a non-zero value, it is returned; otherwise 0 is
  * returned.  INPUT is a pointer to a value to be passed in to the parser.  */
 int tiny_argp_parse(const struct tiny_argp *tiny_argp, size_t argc, char **argv,
-                  unsigned flags, size_t *arg_index, void *input);
+                    unsigned flags, size_t *arg_index, void *input);
 
 /* Flags for tiny_argp_help.  */
 #define TINY_ARGP_HELP_USAGE 0x01 /* a Usage: message. */
-#define TINY_ARGP_HELP_SHORT_USAGE                                  \
-  0x02                             /*  " but don't actually print \
-                                      options.*/
+#define TINY_ARGP_HELP_SHORT_USAGE                                             \
+  0x02                               /*  " but don't actually print            \
+                                        options.*/
 #define TINY_ARGP_HELP_SEE 0x04      /* a `Try ... for more help' message. */
 #define TINY_ARGP_HELP_LONG 0x08     /* a long help message. */
 #define TINY_ARGP_HELP_PRE_DOC 0x10  /* doc string preceding long help.  */
@@ -278,28 +280,31 @@ int tiny_argp_parse(const struct tiny_argp *tiny_argp, size_t argc, char **argv,
 #define TINY_ARGP_HELP_STD_ERR (TINY_ARGP_HELP_SEE)
 /* The standard thing to do after a program command line parsing error, if no
    more specific error message has been printed.  */
-#define TINY_ARGP_HELP_STD_USAGE (TINY_ARGP_HELP_SHORT_USAGE | TINY_ARGP_HELP_SEE)
+#define TINY_ARGP_HELP_STD_USAGE                                               \
+  (TINY_ARGP_HELP_SHORT_USAGE | TINY_ARGP_HELP_SEE)
 /* The standard thing to do in response to a --help option.  */
-#define TINY_ARGP_HELP_STD_HELP \
+#define TINY_ARGP_HELP_STD_HELP                                                \
   (TINY_ARGP_HELP_SHORT_USAGE | TINY_ARGP_HELP_LONG | TINY_ARGP_HELP_DOC)
 
 /* Output a usage message for TINY_ARGP with PRINTER.  FLAGS are from the set
- * TINY_ARGP_HELP_*. This function won't print the '--help' and --usage options */
-void tiny_argp_help(const struct tiny_argp *tiny_argp, tiny_argp_printer_t printer,
-                  unsigned flags, char *name);
+ * TINY_ARGP_HELP_*. This function won't print the '--help' and --usage options
+ */
+void tiny_argp_help(const struct tiny_argp *tiny_argp,
+                    tiny_argp_printer_t printer, unsigned flags, char *name);
 
 /* The following routines are intended to be called from within a tiny_argp
  * parsing routine (thus taking a tiny_argp_state structure as the first
  * argument).  They may or may not print an error message, depending
  * on the flags in STATE -- in any case, because they *don't* exit, the caller
  * should be prepared for this, and should return an appropriate error
- * after calling them.  [tiny_argp_usage & tiny_argp_error should probably be called
- * tiny_argp_state_..., but they're used often enough that they should be short]
+ * after calling them.  [tiny_argp_usage & tiny_argp_error should probably be
+ * called tiny_argp_state_..., but they're used often enough that they should be
+ * short]
  */
 void tiny_argp_state_help(const struct tiny_argp_state *state,
-                        tiny_argp_printer_t printer, unsigned flags);
+                          tiny_argp_printer_t printer, unsigned flags);
 
-/* Possibly output the standard usage message for TINY_ARGP with err_printer.  */
+/* Possibly output the standard usage message for TINY_ARGP with err_printer. */
 void tiny_argp_usage(const struct tiny_argp_state *state);
 
 /* If appropriate, print the string ERROR, preceded by the program name and `:',
