@@ -108,3 +108,10 @@ make size CFLAGS="-std=c11 -O2"
 
 As a rough reference, on x86_64 with GCC 16.1 the compiled object is around
 ~12.5 kB with `-O0`, and ~6.5 kB with `-Os`.
+
+## AI usage
+
+All library code was written by hand.
+
+AI assistance was limited to writing unit tests (reviewed and edited by hand)
+and copyediting the docs.
