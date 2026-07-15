@@ -150,7 +150,7 @@ static void test_short_missing_required_arg(void) {
                           TINY_ARGP_KEY_FINI};
   assert_key_sequence_exact(expected, 3);
   TEST_ASSERT_EQUAL_STRING(
-      "prog: option requires an argument -- 'f'\r\n "
+      "prog: option requires an argument -- 'f'\r\n"
       "Try `prog --help' or `prog --usage' for more information.\r\n",
       mock_stderr);
 }

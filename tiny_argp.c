@@ -716,7 +716,7 @@ static enum exit_type process_option(char *opt, struct tiny_argp_state *state) {
       if (opt_arg.size == SHORT) {
         // No need to create opt_name because it will always be the last short
         // option in the string
-        opt_error("%s: option requires an argument -- '%s'\r\n ", EINVAL, opt,
+        opt_error("%s: option requires an argument -- '%s'\r\n", EINVAL, opt,
                   state);
       } else {
         opt_error("%s: option '%s' requires an argument\r\n", EINVAL,
