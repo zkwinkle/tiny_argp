@@ -2,7 +2,6 @@
 #define TINY_ARGP_H
 
 #include <errno.h>
-#include <inttypes.h>
 #include <stddef.h>
 
 /*****************************************************************************
