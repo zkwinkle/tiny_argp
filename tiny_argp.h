@@ -79,8 +79,9 @@ struct tiny_argp_option {
      also accepted as a short option.  */
   int key;
 
-  /* If non-NULL, this is the name of the argument associated with this
-     option, which is required unless the OPTION_ARG_OPTIONAL flag is set. */
+  /* Name of the argument associated with this option, shown in help output
+     (e.g. "--foo=NAME"). If NULL, the option takes no argument (boolean flag).
+     If non-NULL, an argument is required unless OPTION_ARG_OPTIONAL is set. */
   const char *arg;
 
   /* OPTION_ flags.  */

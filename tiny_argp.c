@@ -1055,15 +1055,14 @@ void tiny_argp_help(const struct tiny_argp *tiny_argp,
 
 void tiny_argp_state_help(const struct tiny_argp_state *state,
                           tiny_argp_printer_t printer, unsigned flags) {
-  if (state->flags & TINY_ARGP_NO_ERRS) {
-    return;
-  }
-
   bool include_help = !(state->flags & TINY_ARGP_NO_HELP);
   help(state->root_tiny_argp, printer, flags, state->name, include_help);
 }
 
 void tiny_argp_usage(const struct tiny_argp_state *state) {
+  if (state->flags & TINY_ARGP_NO_ERRS) {
+    return;
+  }
   tiny_argp_state_help(state, state->root_tiny_argp->err_printer,
                        TINY_ARGP_HELP_STD_USAGE);
 }
