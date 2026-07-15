@@ -3,6 +3,15 @@
 
 #include <stddef.h>
 
+/* tiny_argp is a GNU argp-inspired command-line parser aimed at embedded and
+ * freestanding C code. Typical use is four steps:
+ *   1. Declare a `struct tiny_argp_option[]` array terminated by `{0}`.
+ *   2. Write a parser callback of type `tiny_argp_parser_t`.
+ *   3. Fill in a `struct tiny_argp` with the options, parser, printers, and
+ *      doc strings.
+ *   4. Call `tiny_argp_parse()` from `main()`.
+ * See `examples/` and the project README for a walk-through. */
+
 /*****************************************************************************
  * Error codes
  ****************************************************************************/
@@ -18,48 +27,6 @@
 /* Returned by tiny_argp_parse when the library itself rejects the command line
  * (e.g. unknown option, missing required argument, malformed input). */
 #define TINY_ARGP_ERR_PARSE (-53)
-
-// # Early exit behaviour:
-//
-// ## Possible errors
-//
-// During option parsing:
-//	- <name>: unrecognized option 'opt_given_with_dashes_and_arg_maybe'
-//	- <name>: option '--opt_given' requires an argument
-//	- <name>: option '--long_opt' doesn't allow an argument
-//	- <name>: option requires an argument -- 'opt_given'
-//
-// Return UNKNOWN on known key:
-//	- <name>: <opt_given_with_dashes>: (PROGRAM ERROR) Option should have
-// been recognized!?
-//
-// Return UNKNOWN on TINY_ARGP_KEY_ARGS:
-//	- Parses SUCESS key then FINI (always)
-//	- On SUCCESS still skips ahead to END
-//
-// ## NO_EXIT:
-//  Instant exit on the following:
-//		- INIT parser error
-//
-//	Passes ERROR key next then FINI:
-//		- Parser returns Non-UNKNOWN error
-//		- option parsing errors
-//		- Return UNKNOWN on known key
-//
-//	Continues as if nothing:
-//	  - --help/--usage
-//
-//
-// ## !NO_EXIT:
-//
-// Instant exit on the following:
-//	- INIT parser error
-//	- option parsing errors
-//	- Return UNKNOWN on known key
-//	- --help/--usage
-//
-// Passes ERROR key next then FINI:
-//	- Parser returns Non-UNKNOWN error
 
 /*****************************************************************************
  * Command options
@@ -153,6 +120,29 @@ typedef int (*tiny_argp_printer_t)(const char *fmt, ...);
 #define TINY_ARGP_KEY_SUCCESS 0x1000004
 /* Passed in if an error occurs.  */
 #define TINY_ARGP_KEY_ERROR 0x1000005
+/* # Early exit behaviour
+ *
+ * In this section "exit" means tiny_argp_parse stops parsing and returns
+ * early to its caller, not an exit() call that would kill the runtime.
+ *
+ * Possible errors during option parsing (printed with the program name
+ * prefix) include: "unrecognized option", "option '--x' requires an
+ * argument", "option '--x' doesn't allow an argument", and the short-form
+ * "option requires an argument -- 'x'". Returning UNKNOWN from a known
+ * user key yields a "(PROGRAM ERROR) Option should have been recognized!?"
+ * message. Returning UNKNOWN on TINY_ARGP_KEY_ARGS always routes through
+ * SUCCESS then FINI, and on SUCCESS the parser still skips ahead to END.
+ *
+ * With TINY_ARGP_NO_EXIT set: an INIT parser error aborts parsing
+ * immediately. Option-parsing errors, UNKNOWN on a known key, and any
+ * non-UNKNOWN parser error route through the ERROR key and then FINI
+ * before returning. A --help/--usage option is treated as a normal
+ * successful parse.
+ *
+ * Without TINY_ARGP_NO_EXIT: parsing aborts immediately on an INIT parser
+ * error, on option-parsing errors, on UNKNOWN returned for a known key,
+ * and on --help/--usage. Only a non-UNKNOWN parser error still routes
+ * through ERROR then FINI. */
 
 /*****************************************************************************
  * Parser

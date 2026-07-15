@@ -14,7 +14,7 @@ A GNU argp inspired CLI parser for embedded / bare-metal C.
   (compiler-provided freestanding headers, always available) plus a handful
   of small routines from `<string.h>` and `<ctype.h>` (`memcpy`, `strcmp`,
   `strlen`, `isprint`, …) that any embedded libc like newlib-nano or
-  picolibc supplies cheaply.
+  picolibc supplies.
 
 **Configurable output**
 
@@ -46,17 +46,17 @@ Any minimal `printf` implementation that handles `%s` and `%c` is sufficient
 
 ## Examples
 
-The `examples/` directory contains four self-contained programs.
+The [examples/](./examples/) directory contains four self-contained programs.
 
-- [`examples/ex1_minimal.c`](examples/ex1_minimal.c): A minimal program with no
+- [examples/ex1_minimal.c](examples/ex1_minimal.c): A minimal program with no
 options and no positional handling. Only has `--help` and `--usage` which are
 added by the library.
-- [`examples/ex2_options.c`](examples/ex2_options.c): A program with a handful
+- [examples/ex2_options.c](examples/ex2_options.c): A program with a handful
 of options and no positional arguments.
-- [`examples/ex3_positionals.c`](examples/ex3_positionals.c): Adds a required
+- [examples/ex3_positionals.c](examples/ex3_positionals.c): Adds a required
 positional argument `ARG1` and a variable-length list of trailing `STRING`s on
 top of ex2's options. Also has more advanced `--help` output formatting.
-- [`examples/ex4_subcommands.c`](examples/ex4_subcommands.c): An example using
+- [examples/ex4_subcommands.c](examples/ex4_subcommands.c): An example using
 `git`-style subcommands. An initial parser looks for an `add` or `list`
 subcommands and then calls their parsers with the remaining arguments. Each
 subcommand has its own options and help output.
