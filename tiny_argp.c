@@ -104,7 +104,7 @@ static void print_opt_usage(enum arg_dashes dashes, struct tiny_argp_option opt,
     return;
   }
   // Short options with no arguments are handled specially by caller function
-  if (dashes == SHORT && (!isprint(opt.key) || opt.arg == 0)) {
+  if (dashes == SHORT && (!isprint((unsigned char)opt.key) || opt.arg == 0)) {
     return;
   }
   if (dashes == LONG && opt.name == 0) {
@@ -249,7 +249,7 @@ static void print_usage(const struct tiny_argp *tiny_argp,
     while (!is_end_option(tiny_argp->options[i])) {
       struct tiny_argp_option option = tiny_argp->options[i];
       i++;
-      if (isprint(option.key) && option.arg == 0 &&
+      if (isprint((unsigned char)option.key) && option.arg == 0 &&
           !(option.flags & OPTION_HIDDEN)) {
         if (!noarg_shorts) {
           printer("[");
@@ -304,7 +304,7 @@ static void print_opt_help(const struct tiny_argp_option opt,
   if (opt.flags & OPTION_HIDDEN) {
     return;
   }
-  bool print_short = isprint(opt.key);
+  bool print_short = isprint((unsigned char)opt.key);
   bool print_long = opt.name != 0;
   if (!print_short && !print_long) {
     return;
@@ -370,7 +370,7 @@ static void print_long_help(const struct tiny_argp_option *options,
   bool print_arg_info = false;
   while (!is_end_option(*options)) {
     print_opt_help(*options, printer);
-    if (options->name != 0 && isprint(options->key) && options->arg != 0) {
+    if (options->name != 0 && isprint((unsigned char)options->key) && options->arg != 0) {
       print_arg_info = true;
     }
     options++;
@@ -544,7 +544,7 @@ static bool check_option(const char *opt, const enum arg_dashes dashes,
                          const struct tiny_argp_option option) {
   switch (dashes) {
   case SHORT:
-    if (!isprint(option.key)) {
+    if (!isprint((unsigned char)option.key)) {
       break;
     }
     if (!strncmp(opt, (char *)&option.key, 1)) {
