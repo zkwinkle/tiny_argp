@@ -106,7 +106,7 @@ static void test_name_defaults_to_argv0(void) {
   TEST_ASSERT_EQUAL_STRING("the-prog-name", ms.name_at_end);
 }
 
-/* Capture parser used by test_name_is_null_at_init. Records
+/* Capture parser used by test_name_defaults_at_init. Records
  * state->name into (char **)state->input at KEY_INIT time. */
 static int capture_init_name(int key, char *arg,
                              struct tiny_argp_state *state) {
@@ -117,17 +117,18 @@ static int capture_init_name(int key, char *arg,
   return TINY_ARGP_SUCCESS;
 }
 
-/* --- state->name is NULL when the parser observes it during INIT (default
- * mode assigns it *after* INIT). */
-static void test_name_is_null_at_init(void) {
+/* --- state->name is a valid empty string when the parser observes it during
+* INIT, so it's always a safe `%s` target. */
+static void test_name_defaults_at_init(void) {
   char *name_at_init =
-      (char *)"not-null"; /* non-NULL so a missed write is obvious */
+      (char *)"not-empty"; /* distinct value so a missed write is obvious */
   struct tiny_argp capture_argp = {opts, capture_init_name, "",
                                    "",   mock_printer,      mock_err_printer};
   char **argv = build_argv(1, "prog");
   int r = tiny_argp_parse(&capture_argp, 1, argv, 0, NULL, &name_at_init);
   TEST_ASSERT_EQUAL(TINY_ARGP_SUCCESS, r);
-  TEST_ASSERT_NULL(name_at_init);
+  TEST_ASSERT_NOT_NULL(name_at_init);
+  TEST_ASSERT_EQUAL_STRING("", name_at_init);
 }
 
 /* --- state->quoted stays 0 when `--` never appears. */
@@ -195,12 +196,6 @@ static void test_arg_index_null_ok(void) {
 /* --- argc == 0 with TINY_ARGP_PARSE_ARGV0 should not crash. */
 static void test_argc_zero_with_parse_argv0(void) {
   /* One-element array of NULL. */
-
-  /* TODO: We use argv = {NULL}, a 1-element array containing a
-   * NULL. A truly zero-length argv (a pointer to nothing) would UB in
-   * default mode via the `state->name = *argv` deref at tiny_argp.c:979.
-   * Add a test that passes such an argv and confirms safe handling — or
-   * add a guard to the impl. */
   char *safe_argv[] = {NULL};
   int r =
       tiny_argp_parse(&argp, 0, safe_argv, TINY_ARGP_PARSE_ARGV0, NULL, NULL);
@@ -296,7 +291,7 @@ void run_state_tests(void) {
   RUN_TEST(test_input_passthrough);
   RUN_TEST(test_arg_num_tracks);
   RUN_TEST(test_name_defaults_to_argv0);
-  RUN_TEST(test_name_is_null_at_init);
+  RUN_TEST(test_name_defaults_at_init);
   RUN_TEST(test_quoted_zero_without_dashes);
   RUN_TEST(test_quoted_set_after_dashes);
   RUN_TEST(test_argc_matches);

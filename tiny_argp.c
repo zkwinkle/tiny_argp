@@ -1006,7 +1006,7 @@ int tiny_argp_parse(const struct tiny_argp *tiny_argp, size_t argc, char **argv,
                                       .arg_num = 0,
                                       .quoted = 0,
                                       .input = input,
-                                      .name = NULL,
+                                      .name = "",
                                       .pstate = (void *)&private_state};
   struct tiny_argp_state *state = &state_obj;
 
@@ -1016,7 +1016,9 @@ int tiny_argp_parse(const struct tiny_argp *tiny_argp, size_t argc, char **argv,
 
   // When passing ARGV0 user should overwrite the name field.
   if (!(flags & TINY_ARGP_PARSE_ARGV0)) {
-    state->name = *argv;
+    if (argc > 0 && *argv != NULL) {
+      state->name = *argv;
+    }
     state->next++;
   }
 

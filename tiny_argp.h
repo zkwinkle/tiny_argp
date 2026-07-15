@@ -227,11 +227,13 @@ struct tiny_argp_state {
 /* Flags for tiny_argp_parse (note that the defaults are those that are
    convenient for program command line parsing): */
 
-/* Don't ignore the first element of ARGV.  Normally  the first element of
- * the argument vector is skipped for option parsing purposes, as it corresponds
- * to the program name in a command line. If this flag is set, the user should
- * overwrite the state->name field inside the parse_opt function so that it's
- * non-null. */
+/* Don't ignore the first element of ARGV.  Normally the first element of
+ * the argument vector is skipped for option parsing purposes, as it
+ * corresponds to the program name in a command line.  If this flag is set,
+ * the library will not populate state->name from argv[0]; it stays as its
+ * default `""`.  Overwrite state->name inside the parse function (typically
+ * at KEY_INIT) if you want a meaningful program name to appear in error
+ * output. */
 #define TINY_ARGP_PARSE_ARGV0 0x01
 
 /* Don't print error messages.  */
