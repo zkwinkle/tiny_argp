@@ -2,6 +2,15 @@
 
 A GNU argp inspired CLI parser for embedded / bare-metal C.
 
+## Usage
+
+Copy [tiny_argp.c](./tiny_argp.c) and [tiny_argp.h](./tiny_argp.h) into your
+project and build them alongside your other sources.
+
+To get started, look at [examples/ex1_minimal.c](examples/ex1_minimal.c) for a
+minimal working CLI program, then browse the rest of the [examples](#examples)
+below for options, positional arguments, and subcommands.
+
 ## Embedded suitability
 
 **No allocations**
@@ -13,7 +22,7 @@ A GNU argp inspired CLI parser for embedded / bare-metal C.
   - Only `<stdbool.h>` and `<stddef.h>`
   (compiler-provided freestanding headers, always available) plus a handful
   of small routines from `<string.h>` and `<ctype.h>` (`memcpy`, `strcmp`,
-  `strlen`, `isprint`, …) that any embedded libc like newlib-nano or
+  `strlen`, `isprint`, …) that an embedded libc like newlib-nano or
   picolibc supplies.
 
 **Configurable output**
