@@ -2,6 +2,31 @@
 
 A GNU argp inspired CLI parser for embedded / bare-metal C.
 
+## Embedded suitability
+
+**No allocations**
+
+  - All state is stack-based or caller-provided.
+
+**Minimal stdlib dependency**
+
+  - Only `<stdbool.h>` and `<stddef.h>`
+  (compiler-provided freestanding headers, always available) plus a handful
+  of small routines from `<string.h>` and `<ctype.h>` (`memcpy`, `strcmp`,
+  `strlen`, `isprint`, …) that any embedded libc like newlib-nano or
+  picolibc supplies cheaply.
+
+**Configurable output**
+
+  - All output goes through `printer` / `err_printer` callbacks, so you provide
+    your own `printf` and route it to whichever channel your target uses (UART,
+    USB serial, stdout, an in-memory log buffer, etc.). See [Printer
+    requirements](#printer-requirements) below.
+
+**Never terminates the runtime**
+
+  - No `exit()` or similar, errors are returned to the caller.
+
 ## Printer requirements
 
 All output goes through the `printer` and `err_printer` callbacks on the
