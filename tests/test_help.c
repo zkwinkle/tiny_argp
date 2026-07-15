@@ -188,8 +188,7 @@ static void test_usage_long_option(void) {
 }
 
 /* `-?` is the short-form alias for `--help`: same return code, same
- * built-in behavior (no user 'a' delivered because it's the built-in
- * help key). */
+ * built-in behavior. */
 static void test_short_help(void) {
   char **argv = build_argv(2, "prog", "-?");
   int r = tiny_argp_parse(&argp_basic, 2, argv, 0, NULL, NULL);

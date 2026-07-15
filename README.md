@@ -44,6 +44,40 @@ The library only ever calls them with the following conversion specifiers:
 Any minimal `printf` implementation that handles `%s` and `%c` is sufficient
 (e.g. [mpaland/printf](https://github.com/mpaland/printf), [nanoprintf](https://github.com/charlesnicholson/nanoprintf)).
 
+## Examples
+
+The `examples/` directory contains four self-contained programs.
+
+- [`examples/ex1_minimal.c`](examples/ex1_minimal.c): A minimal program with no
+options and no positional handling. Only has `--help` and `--usage` which are
+added by the library.
+- [`examples/ex2_options.c`](examples/ex2_options.c): A program with a handful
+of options and no positional arguments.
+- [`examples/ex3_positionals.c`](examples/ex3_positionals.c): Adds a required
+positional argument `ARG1` and a variable-length list of trailing `STRING`s on
+top of ex2's options. Also has more advanced `--help` output formatting.
+- [`examples/ex4_subcommands.c`](examples/ex4_subcommands.c): An example using
+`git`-style subcommands. An initial parser looks for an `add` or `list`
+subcommands and then calls their parsers with the remaining arguments. Each
+subcommand has its own options and help output.
+
+Build them all with:
+
+```
+make -C examples
+```
+
+Then invoke any of the binaries directly:
+
+```
+examples/build/ex2_options --help
+examples/build/ex3_positionals -v -o /tmp/out A B C
+examples/build/ex4_subcommands add --name=widget --count=3
+```
+
+`make -C examples verify` runs a shell harness that exercises each example with
+a spread of arg combinations and asserts on exit code and output.
+
 ## To Test
 
 ```
