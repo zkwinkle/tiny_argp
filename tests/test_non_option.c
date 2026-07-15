@@ -432,7 +432,7 @@ static void test_bare_dash_at_start(void) {
 static void test_bundled_short_with_trailing_dash(void) {
   char **argv = build_argv(2, "prog", "-a-");
   int r = tiny_argp_parse(&argp_accept, 2, argv, TINY_ARGP_NO_EXIT, NULL, NULL);
-  TEST_ASSERT_EQUAL(EINVAL, r);
+  TEST_ASSERT_EQUAL(TINY_ARGP_ERR_PARSE, r);
   /* 'a' is delivered before the '-' char triggers the error. */
   const int expected[] = {TINY_ARGP_KEY_INIT, 'a', TINY_ARGP_KEY_ERROR,
                           TINY_ARGP_KEY_FINI};

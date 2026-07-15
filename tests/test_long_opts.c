@@ -60,15 +60,15 @@ static void test_long_with_separate_arg(void) {
   TEST_ASSERT_EQUAL_STRING("my/path", parser_log[1].arg);
 }
 
-/* Long option that requires an arg but has none at end of argv: EINVAL.
- * Parser is called with INIT, then jumps straight to ERROR/FINI — key 'f'
- * must not be delivered. stderr carries the "requires an argument" message
- * followed by the standard "Try ... --help" hint. */
+/* Long option that requires an arg but has none at end of argv:
+ * TINY_ARGP_ERR_PARSE. Parser is called with INIT, then jumps straight to
+ * ERROR/FINI — key 'f' must not be delivered. stderr carries the "requires an
+ * argument" message followed by the standard "Try ... --help" hint. */
 static void test_long_missing_required_arg(void) {
   char **argv = build_argv(2, "prog", "--file");
   int r =
       tiny_argp_parse(&argp_takes_arg, 2, argv, TINY_ARGP_NO_EXIT, NULL, NULL);
-  TEST_ASSERT_EQUAL(EINVAL, r);
+  TEST_ASSERT_EQUAL(TINY_ARGP_ERR_PARSE, r);
   const int expected[] = {TINY_ARGP_KEY_INIT, TINY_ARGP_KEY_ERROR,
                           TINY_ARGP_KEY_FINI};
   assert_key_sequence_exact(expected, 3);
@@ -84,7 +84,7 @@ static void test_long_missing_required_arg(void) {
 static void test_long_bool_gets_unwanted_arg(void) {
   char **argv = build_argv(2, "prog", "--alpha=nope");
   int r = tiny_argp_parse(&argp_bool, 2, argv, TINY_ARGP_NO_EXIT, NULL, NULL);
-  TEST_ASSERT_EQUAL(EINVAL, r);
+  TEST_ASSERT_EQUAL(TINY_ARGP_ERR_PARSE, r);
   const int expected[] = {TINY_ARGP_KEY_INIT, TINY_ARGP_KEY_ERROR,
                           TINY_ARGP_KEY_FINI};
   assert_key_sequence_exact(expected, 3);
@@ -94,12 +94,12 @@ static void test_long_bool_gets_unwanted_arg(void) {
       mock_stderr);
 }
 
-/* Unknown long option `--bogus`: EINVAL, INIT -> ERROR -> FINI. stderr
- * reports "unrecognized option". */
+/* Unknown long option `--bogus`: TINY_ARGP_ERR_PARSE, INIT -> ERROR -> FINI.
+ * stderr reports "unrecognized option". */
 static void test_long_unknown(void) {
   char **argv = build_argv(2, "prog", "--bogus");
   int r = tiny_argp_parse(&argp_bool, 2, argv, TINY_ARGP_NO_EXIT, NULL, NULL);
-  TEST_ASSERT_EQUAL(EINVAL, r);
+  TEST_ASSERT_EQUAL(TINY_ARGP_ERR_PARSE, r);
   const int expected[] = {TINY_ARGP_KEY_INIT, TINY_ARGP_KEY_ERROR,
                           TINY_ARGP_KEY_FINI};
   assert_key_sequence_exact(expected, 3);
@@ -144,7 +144,7 @@ static void test_long_prefix_abbrev_not_supported(void) {
   char **argv = build_argv(2, "prog", "--fi");
   int r =
       tiny_argp_parse(&argp_takes_arg, 2, argv, TINY_ARGP_NO_EXIT, NULL, NULL);
-  TEST_ASSERT_EQUAL(EINVAL, r);
+  TEST_ASSERT_EQUAL(TINY_ARGP_ERR_PARSE, r);
   const int expected[] = {TINY_ARGP_KEY_INIT, TINY_ARGP_KEY_ERROR,
                           TINY_ARGP_KEY_FINI};
   assert_key_sequence_exact(expected, 3);
@@ -160,7 +160,7 @@ static void test_long_prefix_abbrev_not_supported(void) {
 static void test_long_bool_empty_equals_rejected(void) {
   char **argv = build_argv(2, "prog", "--alpha=");
   int r = tiny_argp_parse(&argp_bool, 2, argv, TINY_ARGP_NO_EXIT, NULL, NULL);
-  TEST_ASSERT_EQUAL(EINVAL, r);
+  TEST_ASSERT_EQUAL(TINY_ARGP_ERR_PARSE, r);
   const int expected[] = {TINY_ARGP_KEY_INIT, TINY_ARGP_KEY_ERROR,
                           TINY_ARGP_KEY_FINI};
   assert_key_sequence_exact(expected, 3);

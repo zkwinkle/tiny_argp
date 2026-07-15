@@ -531,7 +531,7 @@ enum exit_type call_parser(int key, char *arg, struct tiny_argp_state *state) {
     // when it's returned from a user-defined key.
     opt_error("%s: %s: (PROGRAM ERROR) Option should have been "
               "recognized!?\r\n",
-              EINVAL, PSTATE(state)->current_opt_name, state);
+              TINY_ARGP_ERR_PARSE, PSTATE(state)->current_opt_name, state);
   }
 
   state->arg_num = PSTATE(state)->arg_num; // Overwrite public arg_num
@@ -706,9 +706,10 @@ static enum exit_type process_option(char *opt, struct tiny_argp_state *state) {
       if (opt_arg.size == SHORT) {
         // There might be more short opts following it in opt string
         const char opt_name[] = {*opt, '\0'};
-        opt_error("%s: invalid option '%s'\r\n", EINVAL, &opt_name[0], state);
+        opt_error("%s: invalid option '%s'\r\n", TINY_ARGP_ERR_PARSE,
+                  &opt_name[0], state);
       } else {
-        opt_error("%s: unrecognized option '%s'\r\n", EINVAL,
+        opt_error("%s: unrecognized option '%s'\r\n", TINY_ARGP_ERR_PARSE,
                   PSTATE(state)->current_opt_name, state);
       }
     } else if (opt_arg.option->arg != 0 && opt_arg.arg == NULL &&
@@ -716,15 +717,15 @@ static enum exit_type process_option(char *opt, struct tiny_argp_state *state) {
       if (opt_arg.size == SHORT) {
         // No need to create opt_name because it will always be the last short
         // option in the string
-        opt_error("%s: option requires an argument -- '%s'\r\n", EINVAL, opt,
-                  state);
+        opt_error("%s: option requires an argument -- '%s'\r\n",
+                  TINY_ARGP_ERR_PARSE, opt, state);
       } else {
-        opt_error("%s: option '%s' requires an argument\r\n", EINVAL,
-                  PSTATE(state)->current_opt_name, state);
+        opt_error("%s: option '%s' requires an argument\r\n",
+                  TINY_ARGP_ERR_PARSE, PSTATE(state)->current_opt_name, state);
       }
     } else if (opt_arg.option->arg == NULL && opt_arg.arg != NULL) {
-      opt_error("%s: option '%s' doesn't allow an argument\r\n", EINVAL,
-                PSTATE(state)->current_opt_name, state);
+      opt_error("%s: option '%s' doesn't allow an argument\r\n",
+                TINY_ARGP_ERR_PARSE, PSTATE(state)->current_opt_name, state);
     }
 
     if (EXIT_STATE(state)) {

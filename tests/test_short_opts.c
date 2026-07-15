@@ -130,7 +130,7 @@ static void test_short_repeated_flag(void) {
 static void test_short_unknown(void) {
   char **argv = build_argv(2, "prog", "-Z");
   int r = tiny_argp_parse(&argp_bool, 2, argv, TINY_ARGP_NO_EXIT, NULL, NULL);
-  TEST_ASSERT_EQUAL(EINVAL, r);
+  TEST_ASSERT_EQUAL(TINY_ARGP_ERR_PARSE, r);
   const int expected[] = {TINY_ARGP_KEY_INIT, TINY_ARGP_KEY_ERROR,
                           TINY_ARGP_KEY_FINI};
   assert_key_sequence_exact(expected, 3);
@@ -145,7 +145,7 @@ static void test_short_missing_required_arg(void) {
   char **argv = build_argv(2, "prog", "-f");
   int r =
       tiny_argp_parse(&argp_takes_arg, 2, argv, TINY_ARGP_NO_EXIT, NULL, NULL);
-  TEST_ASSERT_EQUAL(EINVAL, r);
+  TEST_ASSERT_EQUAL(TINY_ARGP_ERR_PARSE, r);
   const int expected[] = {TINY_ARGP_KEY_INIT, TINY_ARGP_KEY_ERROR,
                           TINY_ARGP_KEY_FINI};
   assert_key_sequence_exact(expected, 3);

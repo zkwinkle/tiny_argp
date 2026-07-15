@@ -1,7 +1,6 @@
 #ifndef TINY_ARGP_H
 #define TINY_ARGP_H
 
-#include <errno.h>
 #include <stddef.h>
 
 /*****************************************************************************
@@ -9,13 +8,16 @@
  ****************************************************************************/
 #define TINY_ARGP_SUCCESS 0
 /* What to return for unrecognized keys (UNKNOWN).  For special TINY_ARGP_KEY_
- * keys, such returns will simply be ignored.  For user keys, this error will be
- * turned into EINVAL; returning EINVAL itself would
- * result in an immediate stop to parsing in *all* cases.  */
-#define TINY_ARGP_ERR_UNKNOWN E2BIG
+ * keys, such returns will simply be ignored.  For user keys, this error will
+ * be turned into TINY_ARGP_ERR_PARSE; returning TINY_ARGP_ERR_PARSE itself
+ * would result in an immediate stop to parsing in *all* cases.  */
+#define TINY_ARGP_ERR_UNKNOWN (-51)
 /* Returned if tiny_argp exits early because a '--help' or '--usage' option was
  * parsed. */
-#define TINY_ARGP_HELP_OPT ECANCELED
+#define TINY_ARGP_HELP_OPT (-52)
+/* Returned by tiny_argp_parse when the library itself rejects the command line
+ * (e.g. unknown option, missing required argument, malformed input). */
+#define TINY_ARGP_ERR_PARSE (-53)
 
 // # Early exit behaviour:
 //

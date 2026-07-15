@@ -5,24 +5,25 @@ static int rec(int key, char *arg, struct tiny_argp_state *state) {
   (void)state;
   log_parser_call(key, arg);
   switch (key) {
-    case 'a': case 'f': case 'h':
-    case 1:  /* SOH — long-only option key */
-    case TINY_ARGP_KEY_ARG:
-    case TINY_ARGP_KEY_INIT:
-    case TINY_ARGP_KEY_END:
-    case TINY_ARGP_KEY_NO_ARGS:
-    case TINY_ARGP_KEY_SUCCESS:
-    case TINY_ARGP_KEY_ERROR:
-    case TINY_ARGP_KEY_FINI:
-      return TINY_ARGP_SUCCESS;
-    default:
-      return TINY_ARGP_ERR_UNKNOWN;
+  case 'a':
+  case 'f':
+  case 'h':
+  case 1: /* SOH — long-only option key */
+  case TINY_ARGP_KEY_ARG:
+  case TINY_ARGP_KEY_INIT:
+  case TINY_ARGP_KEY_END:
+  case TINY_ARGP_KEY_NO_ARGS:
+  case TINY_ARGP_KEY_SUCCESS:
+  case TINY_ARGP_KEY_ERROR:
+  case TINY_ARGP_KEY_FINI:
+    return TINY_ARGP_SUCCESS;
+  default:
+    return TINY_ARGP_ERR_UNKNOWN;
   }
 }
 
 static const struct tiny_argp_option opts_optional[] = {
-    {"foo", 'f', "V", OPTION_ARG_OPTIONAL, "optional-arg opt"},
-    {0}};
+    {"foo", 'f', "V", OPTION_ARG_OPTIONAL, "optional-arg opt"}, {0}};
 
 static const struct tiny_argp_option opts_hidden[] = {
     {"visible", 'a', 0, 0, "shown flag"},
@@ -30,8 +31,7 @@ static const struct tiny_argp_option opts_hidden[] = {
     {0}};
 
 static const struct tiny_argp_option opts_longonly[] = {
-    {"longonly", 1, 0, 0, "long-only doc"},
-    {0}};
+    {"longonly", 1, 0, 0, "long-only doc"}, {0}};
 
 static struct tiny_argp argp_optional = {
     opts_optional, rec, "", "", mock_printer, mock_err_printer};
@@ -113,9 +113,8 @@ static void test_optional_arg_short_space_not_attached(void) {
  * sibling with the default flags renders normally. */
 static void test_hidden_option_absent_from_help(void) {
   tiny_argp_help(&argp_hidden, mock_printer, TINY_ARGP_HELP_LONG, "prog");
-  TEST_ASSERT_EQUAL_STRING(
-      "  -a, --visible              shown flag\r\n",
-      mock_stdout);
+  TEST_ASSERT_EQUAL_STRING("  -a, --visible              shown flag\r\n",
+                           mock_stdout);
 }
 
 /* OPTION_HIDDEN: hidden only affects help rendering — the option is still
@@ -140,9 +139,8 @@ static void test_long_only_option_callable_from_cli(void) {
  * there's no printable short form to display. */
 static void test_long_only_option_in_help_output(void) {
   tiny_argp_help(&argp_longonly, mock_printer, TINY_ARGP_HELP_LONG, "prog");
-  TEST_ASSERT_EQUAL_STRING(
-      "      --longonly             long-only doc\r\n",
-      mock_stdout);
+  TEST_ASSERT_EQUAL_STRING("      --longonly             long-only doc\r\n",
+                           mock_stdout);
 }
 
 /* Long-only option: passing the raw SOH byte as `-<SOH>` is NOT a way to
@@ -152,10 +150,10 @@ static void test_long_only_option_in_help_output(void) {
 static void test_long_only_option_not_short_settable(void) {
   /* Build argv with a literal SOH byte as the short-option character. */
   char soh_arg[3] = {'-', '\x01', '\0'};
-  char **argv = build_argv(2, "prog",soh_arg);
-  int r = tiny_argp_parse(&argp_longonly, 2, argv, TINY_ARGP_NO_EXIT, NULL,
-                          NULL);
-  TEST_ASSERT_EQUAL(EINVAL, r);
+  char **argv = build_argv(2, "prog", soh_arg);
+  int r =
+      tiny_argp_parse(&argp_longonly, 2, argv, TINY_ARGP_NO_EXIT, NULL, NULL);
+  TEST_ASSERT_EQUAL(TINY_ARGP_ERR_PARSE, r);
   const int expected[] = {TINY_ARGP_KEY_INIT, TINY_ARGP_KEY_ERROR,
                           TINY_ARGP_KEY_FINI};
   assert_key_sequence_exact(expected, 3);
